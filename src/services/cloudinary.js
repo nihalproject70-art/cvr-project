@@ -39,9 +39,30 @@ export const uploadToCloudinary = async (file, onProgress) => {
   });
 };
 
-// Build optimized Cloudinary URL with transformations
+// Build optimized Cloudinary or Unsplash URL with transformations
 export const getOptimizedUrl = (url, options = {}) => {
-  if (!url || !url.includes('cloudinary.com')) return url;
+  if (!url) return url;
+
+  // Unsplash image optimization
+  if (url.includes('images.unsplash.com')) {
+    try {
+      const urlObj = new URL(url);
+      const searchParams = urlObj.searchParams;
+      if (options.width) searchParams.set('w', options.width.toString());
+      if (options.height) {
+        searchParams.set('h', options.height.toString());
+        searchParams.set('fit', 'crop');
+      }
+      searchParams.set('q', '80');
+      searchParams.set('auto', 'format');
+      return urlObj.toString();
+    } catch (e) {
+      return url;
+    }
+  }
+
+  // Cloudinary image optimization
+  if (!url.includes('cloudinary.com')) return url;
 
   const {
     width,

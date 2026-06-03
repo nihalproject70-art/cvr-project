@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { collection, query, where, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
 import { db } from '@/services/firebase';
+import { getDocsWithTimeout } from '@/utils/helpers';
+import { mockProducts } from '@/utils/mockData';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { ProductCard } from '@/components/product/ProductCard';
 import { QuickViewModal } from '@/components/product/QuickViewModal';
@@ -60,32 +62,92 @@ const Shop = () => {
       if (isLoadMore && lastDoc) constraints.push(startAfter(lastDoc));
 
       const q = query(collection(db, 'products'), ...constraints);
-      const snapshot = await getDocs(q);
-      const newProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      // Client-side search filter
-      const filtered = debouncedSearch
-        ? newProducts.filter(p =>
-            p.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            p.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
-          )
-        : newProducts;
+      let fetchedProducts = [];
+      let snapshotDocs = [];
+      let isFallback = false;
 
-      if (isLoadMore) {
-        setProducts(prev => [...prev, ...filtered]);
-      } else {
-        setProducts(filtered);
+      try {
+        const snapshot = await getDocsWithTimeout(q, 1500);
+        fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        snapshotDocs = snapshot.docs;
+      } catch (error) {
+        console.error('Error fetching products from Firestore, using mock fallback:', error);
+        isFallback = true;
       }
 
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
-      setHasMore(snapshot.docs.length === PRODUCTS_PER_PAGE);
+      if (fetchedProducts.length === 0) {
+        isFallback = true;
+      }
+
+      if (isFallback) {
+        // Filter mock products
+        let items = [...mockProducts];
+        if (selectedCategory !== 'All') {
+          items = items.filter(p => p.category === selectedCategory);
+        }
+        
+        // Sort mock products
+        switch (sortBy) {
+          case 'price-asc':
+            items.sort((a, b) => a.price - b.price);
+            break;
+          case 'price-desc':
+            items.sort((a, b) => b.price - a.price);
+            break;
+          case 'popular':
+            items.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+            break;
+          default:
+            items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        // Apply debouncedSearch client-side filter
+        if (debouncedSearch) {
+          items = items.filter(p =>
+            p.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            p.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
+          );
+        }
+
+        // Paginate mock products
+        const startIndex = isLoadMore ? products.length : 0;
+        const endIndex = startIndex + PRODUCTS_PER_PAGE;
+        const pageItems = items.slice(startIndex, endIndex);
+
+        if (isLoadMore) {
+          setProducts(prev => [...prev, ...pageItems]);
+        } else {
+          setProducts(pageItems);
+        }
+
+        setLastDoc(null);
+        setHasMore(items.length > endIndex);
+      } else {
+        // Client-side search filter
+        const filtered = debouncedSearch
+          ? fetchedProducts.filter(p =>
+              p.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+              p.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
+            )
+          : fetchedProducts;
+
+        if (isLoadMore) {
+          setProducts(prev => [...prev, ...filtered]);
+        } else {
+          setProducts(filtered);
+        }
+
+        setLastDoc(snapshotDocs[snapshotDocs.length - 1] || null);
+        setHasMore(snapshotDocs.length === PRODUCTS_PER_PAGE);
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [selectedCategory, sortBy, debouncedSearch, lastDoc]);
+  }, [selectedCategory, sortBy, debouncedSearch, lastDoc, products.length]);
 
   useEffect(() => {
     setProducts([]);

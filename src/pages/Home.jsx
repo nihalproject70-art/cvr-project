@@ -11,7 +11,8 @@ import { QuickViewModal } from '@/components/product/QuickViewModal';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { FloatingWhatsApp } from '@/components/product/WhatsAppButton';
 import { getOptimizedUrl } from '@/services/cloudinary';
-import { formatPrice } from '@/utils/helpers';
+import { formatPrice, getDocsWithTimeout } from '@/utils/helpers';
+import { mockProducts } from '@/utils/mockData';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useCart } from '@/contexts/CartContext';
 import toast from 'react-hot-toast';
@@ -179,7 +180,7 @@ const CategoriesSection = () => {
                 >
                   {/* Background Image */}
                   <img
-                    src={getOptimizedUrl(cat.image, { width: 800 })}
+                    src={getOptimizedUrl(cat.image, { width: 500 })}
                     alt={cat.name}
                     loading="lazy"
                   />
@@ -220,10 +221,16 @@ const FeaturedProducts = () => {
           where('isFeatured', '==', true),
           limit(8)
         );
-        const snapshot = await getDocs(q);
-        setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const snapshot = await getDocsWithTimeout(q, 1500);
+        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (fetchedProducts.length > 0) {
+          setProducts(fetchedProducts);
+        } else {
+          setProducts(mockProducts.filter(p => p.isFeatured).slice(0, 8));
+        }
       } catch (error) {
         console.error('Error fetching featured products:', error);
+        setProducts(mockProducts.filter(p => p.isFeatured).slice(0, 8));
       } finally {
         setLoading(false);
       }
@@ -287,7 +294,7 @@ const MasterpieceCard = ({ product, onQuickView, onAddToCart }) => {
       {/* Product Image Container */}
       <div className="masterpiece-image-container">
         <img
-          src={getOptimizedUrl(imageUrl, { width: 600 })}
+          src={getOptimizedUrl(imageUrl, { width: 400, height: 400 })}
           alt={product.name}
           loading="lazy"
         />
@@ -347,10 +354,16 @@ const BestSellersSlider = () => {
           where('isBestSeller', '==', true),
           limit(10)
         );
-        const snapshot = await getDocs(q);
-        setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const snapshot = await getDocsWithTimeout(q, 1500);
+        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (fetchedProducts.length > 0) {
+          setProducts(fetchedProducts);
+        } else {
+          setProducts(mockProducts.filter(p => p.isBestSeller).slice(0, 10));
+        }
       } catch (error) {
         console.error('Error fetching best sellers:', error);
+        setProducts(mockProducts.filter(p => p.isBestSeller).slice(0, 10));
       } finally {
         setLoading(false);
       }

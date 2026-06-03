@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
 import { db } from '@/services/firebase';
+import { getDocsWithTimeout } from '@/utils/helpers';
+import { mockProducts } from '@/utils/mockData';
 import { SEOHead, BreadcrumbSchema } from '@/components/seo/SEOHead';
 import { ProductCard } from '@/components/product/ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
@@ -32,19 +34,51 @@ const Category = () => {
       ];
       if (isLoadMore && lastDoc) constraints.push(startAfter(lastDoc));
       const q = query(collection(db, 'products'), ...constraints);
-      const snapshot = await getDocs(q);
-      const newProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (isLoadMore) setProducts(prev => [...prev, ...newProducts]);
-      else setProducts(newProducts);
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
-      setHasMore(snapshot.docs.length === 12);
+
+      let fetchedProducts = [];
+      let snapshotDocs = [];
+      let isFallback = false;
+
+      try {
+        const snapshot = await getDocsWithTimeout(q, 1500);
+        fetchedProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        snapshotDocs = snapshot.docs;
+      } catch (error) {
+        console.error('Error fetching products from Firestore, using mock fallback:', error);
+        isFallback = true;
+      }
+
+      if (fetchedProducts.length === 0) {
+        isFallback = true;
+      }
+
+      if (isFallback) {
+        // Filter mock products by categoryName
+        let items = mockProducts.filter(p => p.category === categoryName);
+        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const startIndex = isLoadMore ? products.length : 0;
+        const endIndex = startIndex + 12;
+        const pageItems = items.slice(startIndex, endIndex);
+
+        if (isLoadMore) setProducts(prev => [...prev, ...pageItems]);
+        else setProducts(pageItems);
+
+        setLastDoc(null);
+        setHasMore(items.length > endIndex);
+      } else {
+        if (isLoadMore) setProducts(prev => [...prev, ...fetchedProducts]);
+        else setProducts(fetchedProducts);
+        setLastDoc(snapshotDocs[snapshotDocs.length - 1] || null);
+        setHasMore(snapshotDocs.length === 12);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [categoryName, lastDoc]);
+  }, [categoryName, lastDoc, products.length]);
 
   useEffect(() => {
     setProducts([]);

@@ -11,7 +11,8 @@ import { FloatingWhatsApp } from '@/components/product/WhatsAppButton';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { formatPrice, getDiscount } from '@/utils/helpers';
+import { formatPrice, getDiscount, getDocsWithTimeout } from '@/utils/helpers';
+import { mockProducts } from '@/utils/mockData';
 import { getOptimizedUrl } from '@/services/cloudinary';
 import toast from 'react-hot-toast';
 
@@ -30,24 +31,67 @@ const ProductDetail = () => {
       setLoading(true);
       try {
         const q = query(collection(db, 'products'), where('slug', '==', slug), limit(1));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) {
-          const prod = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-          setProduct(prod);
+        
+        let fetchedProduct = null;
+        let isFallback = false;
+
+        try {
+          const snapshot = await getDocsWithTimeout(q, 1500);
+          if (!snapshot.empty) {
+            fetchedProduct = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+          }
+        } catch (err) {
+          console.error('Error fetching product from Firestore, using mock fallback:', err);
+          isFallback = true;
+        }
+
+        if (!fetchedProduct) {
+          isFallback = true;
+        }
+
+        if (isFallback) {
+          const prod = mockProducts.find(p => p.slug === slug);
+          if (prod) {
+            setProduct(prod);
+            // Fetch mock related products
+            if (prod.category) {
+              const rel = mockProducts
+                .filter(p => p.category === prod.category && p.slug !== prod.slug)
+                .slice(0, 4);
+              setRelatedProducts(rel);
+            }
+          }
+        } else {
+          setProduct(fetchedProduct);
           // Fetch related products
-          if (prod.category) {
-            const relQ = query(
-              collection(db, 'products'),
-              where('category', '==', prod.category),
-              limit(4)
-            );
-            const relSnapshot = await getDocs(relQ);
-            setRelatedProducts(
-              relSnapshot.docs
+          if (fetchedProduct.category) {
+            try {
+              const relQ = query(
+                collection(db, 'products'),
+                where('category', '==', fetchedProduct.category),
+                limit(4)
+              );
+              const relSnapshot = await getDocsWithTimeout(relQ, 1500);
+              const relProds = relSnapshot.docs
                 .map(d => ({ id: d.id, ...d.data() }))
-                .filter(p => p.id !== prod.id)
-                .slice(0, 4)
-            );
+                .filter(p => p.id !== fetchedProduct.id)
+                .slice(0, 4);
+              
+              if (relProds.length > 0) {
+                setRelatedProducts(relProds);
+              } else {
+                const rel = mockProducts
+                  .filter(p => p.category === fetchedProduct.category && p.slug !== fetchedProduct.slug)
+                  .slice(0, 4);
+                setRelatedProducts(rel);
+              }
+            } catch (err) {
+              console.error('Error fetching related products:', err);
+              const rel = mockProducts
+                .filter(p => p.category === fetchedProduct.category && p.slug !== fetchedProduct.slug)
+                .slice(0, 4);
+              setRelatedProducts(rel);
+            }
           }
         }
       } catch (error) {

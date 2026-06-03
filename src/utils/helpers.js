@@ -86,3 +86,32 @@ export const generateOrderId = () => {
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `CVR-${timestamp}-${random}`;
 };
+
+// Import getDocs for the timeout wrapper
+import { getDocs } from 'firebase/firestore';
+
+// Query Firestore with a timeout limit (fallback-safe)
+export const getDocsWithTimeout = (q, timeoutMs = 1500) => {
+  return new Promise((resolve, reject) => {
+    let active = true;
+    const timer = setTimeout(() => {
+      active = false;
+      reject(new Error('Query timeout'));
+    }, timeoutMs);
+
+    getDocs(q)
+      .then((snapshot) => {
+        if (active) {
+          clearTimeout(timer);
+          resolve(snapshot);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          clearTimeout(timer);
+          reject(err);
+        }
+      });
+  });
+};
+
