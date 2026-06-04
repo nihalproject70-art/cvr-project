@@ -66,7 +66,7 @@ export const Header = ({ onSearchOpen }) => {
             ))}
           </nav>
 
-          {/* Actions Panel (Search, Cart, Menu) */}
+          {/* Actions Panel (Search, Cart, User Account, Menu) */}
           <div className="header-actions">
             {/* Search Button Toggle */}
             <button className="action-icon-btn" onClick={onSearchOpen} id="searchOpenBtn" aria-label="Open Search Searchbar">
@@ -78,6 +78,42 @@ export const Header = ({ onSearchOpen }) => {
               <i className="fa-solid fa-bag-shopping"></i>
               <span className="cart-count-badge" id="cartCountBadge">{cartCount}</span>
             </button>
+
+            {/* User Account Dropdown / Login Button */}
+            {user ? (
+              <div className="user-dropdown-container">
+                <button className="action-icon-btn" aria-label="User account menu" id="userMenuBtn">
+                  <i className="fa-solid fa-circle-user"></i>
+                </button>
+                <div className="user-dropdown">
+                  <div className="user-dropdown-header">
+                    <p className="user-name">{user.displayName || 'My Account'}</p>
+                    <p className="user-email">{user.email}</p>
+                  </div>
+                  <div className="user-dropdown-divider"></div>
+                  {isAdmin && (
+                    <Link to="/admin/dashboard" className="dropdown-item">
+                      <i className="fa-solid fa-gauge"></i> Admin Dashboard
+                    </Link>
+                  )}
+                  <Link to="/profile" className="dropdown-item">
+                    <i className="fa-solid fa-user-gear"></i> Profile Details
+                  </Link>
+                  <Link to="/orders" className="dropdown-item">
+                    <i className="fa-solid fa-receipt"></i> My Orders
+                  </Link>
+                  <div className="user-dropdown-divider"></div>
+                  <button onClick={handleLogout} className="dropdown-item logout-btn">
+                    <i className="fa-solid fa-right-from-bracket"></i> Sign Out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link to="/login" className="action-icon-btn login-nav-btn" id="loginBtn" aria-label="Login">
+                <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                <span className="login-text">Sign In</span>
+              </Link>
+            )}
 
             {/* Mobile Navigation Hamburger */}
             <button 
@@ -107,6 +143,47 @@ export const Header = ({ onSearchOpen }) => {
                 {link.name}
               </Link>
             ))}
+
+            <div className="user-dropdown-divider" style={{ margin: '1rem 0', opacity: 0.5 }}></div>
+
+            {/* Mobile Auth Options */}
+            {user ? (
+              <>
+                <div style={{ padding: '0.5rem 1rem' }}>
+                  <p style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--color-dark-deep)' }}>
+                    {user.displayName || 'My Account'}
+                  </p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--color-wood-light)' }}>
+                    {user.email}
+                  </p>
+                </div>
+                {isAdmin && (
+                  <Link to="/admin/dashboard" className="nav-link" onClick={() => setMobileOpen(false)}>
+                    <i className="fa-solid fa-gauge" style={{ marginRight: '8px' }}></i> Admin Dashboard
+                  </Link>
+                )}
+                <Link to="/profile" className="nav-link" onClick={() => setMobileOpen(false)}>
+                  <i className="fa-solid fa-user-gear" style={{ marginRight: '8px' }}></i> Profile Details
+                </Link>
+                <Link to="/orders" className="nav-link" onClick={() => setMobileOpen(false)}>
+                  <i className="fa-solid fa-receipt" style={{ marginRight: '8px' }}></i> My Orders
+                </Link>
+                <button 
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }} 
+                  className="nav-link" 
+                  style={{ textAlign: 'left', width: '100%', color: 'var(--color-error)' }}
+                >
+                  <i className="fa-solid fa-right-from-bracket" style={{ marginRight: '8px' }}></i> Sign Out
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="nav-link" onClick={() => setMobileOpen(false)} style={{ color: 'var(--color-gold)' }}>
+                <i className="fa-solid fa-arrow-right-to-bracket" style={{ marginRight: '8px' }}></i> Sign In / Register
+              </Link>
+            )}
           </nav>
           <div className="mobile-nav-footer">
             <a href="tel:+918807173498"><i className="fa-solid fa-phone"></i> +91 88071 73498</a>

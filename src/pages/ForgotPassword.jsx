@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { FiMail, FiArrowLeft } from 'react-icons/fi';
+import { FiMail, FiArrowLeft, FiShield, FiLock, FiKey } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { SEOHead } from '@/components/seo/SEOHead';
 import toast from 'react-hot-toast';
@@ -29,50 +29,109 @@ const ForgotPassword = () => {
   return (
     <>
       <SEOHead title="Reset Password | CVR Handicrafts" noIndex />
-      <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="font-heading text-3xl font-bold text-espresso mb-2">Reset Password</h1>
-            <p className="text-wood-light">Enter your email to receive a reset link</p>
-          </div>
-
-          {/* Card */}
-          <div className="bg-white p-8 rounded-lg shadow-lg border border-wood/5">
-            {sent ? (
-              /* Success State */
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
-                  <FiMail className="text-success" size={28} />
-                </div>
-                <p className="text-espresso font-medium mb-2">Email Sent!</p>
-                <p className="text-sm text-wood-light mb-6">Check your inbox for the reset link.</p>
-                <Link to="/login" className="text-gold font-semibold hover:text-gold-hover">Back to Login</Link>
-              </div>
-            ) : (
-              /* Reset Form */
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                <div>
-                  <div className="relative">
-                    <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-wood-light" size={16} />
-                    <input {...register('email', { required: 'Email is required' })} type="email" placeholder="your@email.com" className={`luxury-input pl-11 ${errors.email ? 'border-error' : ''}`} />
-                  </div>
-                  {errors.email && <p className="text-error text-xs mt-1">{errors.email.message}</p>}
-                </div>
-                <button type="submit" disabled={submitting} className="btn-primary w-full">
-                  <span>{submitting ? 'Sending...' : 'Send Reset Link'}</span>
-                </button>
-              </form>
-            )}
-
-            {/* Back to Login */}
-            <div className="mt-6 text-center">
-              <Link to="/login" className="text-sm text-wood-light hover:text-gold transition-colors inline-flex items-center gap-1">
-                <FiArrowLeft size={14} /> Back to Login
-              </Link>
+      <div className="auth-page">
+        {/* Decorative Left Panel (Desktop only) */}
+        <div className="auth-deco-panel">
+          <div className="auth-pattern-overlay" />
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="auth-deco-content"
+          >
+            <div className="auth-logo">
+              <span>CVR</span> Handicrafts
             </div>
-          </div>
-        </motion.div>
+            <p className="auth-deco-tagline">
+              Don't worry — we'll help you get back into your account securely
+            </p>
+            <div className="auth-deco-divider" />
+            <div className="auth-deco-features">
+              <div className="auth-deco-feature">
+                <div className="auth-deco-feature-icon"><FiShield size={16} /></div>
+                <span>Secure password recovery</span>
+              </div>
+              <div className="auth-deco-feature">
+                <div className="auth-deco-feature-icon"><FiLock size={16} /></div>
+                <span>Encrypted email verification</span>
+              </div>
+              <div className="auth-deco-feature">
+                <div className="auth-deco-feature-icon"><FiKey size={16} /></div>
+                <span>Reset in just a few clicks</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Form Panel */}
+        <div className="auth-form-panel">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            className="auth-form-wrapper"
+          >
+            {/* Mobile Brand */}
+            <div className="auth-mobile-brand">
+              <Link to="/"><span>CVR</span> Handicrafts</Link>
+            </div>
+
+            {/* Header */}
+            <div className="auth-header">
+              <h1>Reset Password</h1>
+              <p>Enter your email to receive a reset link</p>
+            </div>
+
+            {/* Form Card */}
+            <div className="auth-card">
+              {sent ? (
+                /* Success State */
+                <div style={{ textAlign: 'center' }}>
+                  <div className="auth-success-icon">
+                    <FiMail size={28} />
+                  </div>
+                  <p style={{ fontWeight: 600, color: 'var(--color-dark-deep)', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                    Email Sent!
+                  </p>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--color-wood-light)', marginBottom: '1.5rem' }}>
+                    Check your inbox for the password reset link.
+                  </p>
+                  <Link to="/login" style={{ color: 'var(--color-gold)', fontWeight: 600, fontSize: '0.9rem' }}>
+                    Back to Sign In
+                  </Link>
+                </div>
+              ) : (
+                /* Reset Form */
+                <form onSubmit={handleSubmit(onSubmit)}>
+                  <div className="auth-field">
+                    <label>Email Address</label>
+                    <div className="auth-input-wrap">
+                      <FiMail className="input-icon" size={16} />
+                      <input
+                        {...register('email', { required: 'Email is required' })}
+                        type="email"
+                        placeholder="your@email.com"
+                        className={`luxury-input pl-11 ${errors.email ? 'border-error' : ''}`}
+                      />
+                    </div>
+                    {errors.email && <p className="auth-error">{errors.email.message}</p>}
+                  </div>
+                  <button type="submit" disabled={submitting} className="auth-submit-btn">
+                    {submitting && <span className="auth-spinner" />}
+                    <span>{submitting ? 'Sending...' : 'Send Reset Link'}</span>
+                  </button>
+                </form>
+              )}
+
+              {/* Back to Login */}
+              <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+                <Link to="/login" className="auth-back-link">
+                  <FiArrowLeft size={14} /> Back to Sign In
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </>
   );

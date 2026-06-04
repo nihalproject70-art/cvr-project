@@ -8,7 +8,7 @@ export const AdminRoute = ({ children }) => {
   if (loading) return <FullPageLoader />;
 
   if (!user || !isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
 
   return children;

@@ -40,6 +40,10 @@ export default function AddProduct() {
       featured: false,
       bestSeller: false,
       newArrival: true,
+      active: true,
+      productCode: '',
+      height: '',
+      weight: '',
     }
   });
 
@@ -87,6 +91,10 @@ export default function AddProduct() {
         featured: data.featured,
         bestSeller: data.bestSeller,
         newArrival: data.newArrival,
+        active: data.active,
+        productCode: data.productCode,
+        height: data.height,
+        weight: data.weight,
         mainImage: mainImageUrl,
         cloudinaryPublicId: mainImagePublicId,
         galleryImages: galleryUrls,
@@ -156,13 +164,25 @@ export default function AddProduct() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
+                  Product Code
+                </label>
+                <input
+                  type="text"
+                  {...register('productCode')}
+                  className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
+                  placeholder="e.g. CVR-001"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
                   SKU (Optional)
                 </label>
                 <input
                   type="text"
                   {...register('sku')}
                   className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
-                  placeholder="e.g. CVR-BR-01"
+                  placeholder="e.g. BR-01"
                 />
               </div>
             </div>
@@ -202,6 +222,31 @@ export default function AddProduct() {
                   {...register('stock', { required: 'Stock is required', min: 0 })}
                   className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
                   placeholder="10"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
+                  Height (inches/cm)
+                </label>
+                <input
+                  type="text"
+                  {...register('height')}
+                  className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
+                  placeholder="e.g. 10 inches"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
+                  Weight (kg/gms)
+                </label>
+                <input
+                  type="text"
+                  {...register('weight')}
+                  className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
+                  placeholder="e.g. 1.5 kg"
                 />
               </div>
             </div>
@@ -287,6 +332,18 @@ export default function AddProduct() {
                   />
                   <label htmlFor="newArrival" className="ml-2 text-sm text-espresso font-medium">
                     New Arrival
+                  </label>
+                </div>
+
+                <div className="flex items-center pt-2 border-t border-wood/10 mt-2">
+                  <input
+                    type="checkbox"
+                    id="active"
+                    {...register('active')}
+                    className="h-4 w-4 text-gold border-wood/20 rounded focus:ring-gold"
+                  />
+                  <label htmlFor="active" className="ml-2 text-sm text-espresso font-bold">
+                    Product is Active
                   </label>
                 </div>
               </div>

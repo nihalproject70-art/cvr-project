@@ -33,6 +33,11 @@ const AdminOrders = lazy(() => import('@/admin/pages/Orders'));
 const AdminCustomers = lazy(() => import('@/admin/pages/Customers'));
 const AdminReviews = lazy(() => import('@/admin/pages/Reviews'));
 const AdminSettings = lazy(() => import('@/admin/pages/Settings'));
+const AdminBanners = lazy(() => import('@/admin/pages/Banners'));
+const AdminHomepageManager = lazy(() => import('@/admin/pages/HomepageManager'));
+const AdminPayments = lazy(() => import('@/admin/pages/Payments'));
+const AdminReports = lazy(() => import('@/admin/pages/Reports'));
+const AdminNotifications = lazy(() => import('@/admin/pages/Notifications'));
 
 function App() {
   return (
@@ -71,6 +76,11 @@ function App() {
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="reviews" element={<AdminReviews />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="banners" element={<AdminBanners />} />
+          <Route path="homepage" element={<AdminHomepageManager />} />
+          <Route path="payments" element={<AdminPayments />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="notifications" element={<AdminNotifications />} />
         </Route>
 
         {/* 404 */}

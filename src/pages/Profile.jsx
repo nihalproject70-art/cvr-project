@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { FiUser, FiMail, FiLock, FiShoppingBag, FiHeart, FiEdit3 } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiShoppingBag, FiHeart, FiEdit3, FiCheck, FiX, FiCalendar, FiShield, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 import { SEOHead } from '@/components/seo/SEOHead';
 import toast from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const { user, updateUserProfile, updateUserPassword } = useAuth();
+  const { user, updateUserProfile, updateUserPassword, logout } = useAuth();
+  const { setIsOpen: setWishlistOpen } = useWishlist();
+  const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
@@ -41,87 +44,237 @@ const Profile = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  // Get user initials for the avatar
+  const getInitials = () => {
+    const name = user?.displayName || user?.email || 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Format the creation date
+  const memberSince = user?.metadata?.creationTime
+    ? new Date(user.metadata.creationTime).toLocaleDateString('en-IN', { year: 'numeric', month: 'long' })
+    : null;
+
   return (
     <>
       <SEOHead title="My Account | CVR Handicrafts" noIndex />
-      <section className="py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="font-heading text-3xl font-bold text-espresso mb-8">My Account</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Sidebar */}
-            <div className="space-y-3">
-              {/* User Avatar Card */}
-              <div className="bg-white p-6 rounded-lg border border-wood/5">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/10 flex items-center justify-center">
-                  <FiUser className="text-gold" size={28} />
+      {/* Page Header Banner */}
+      <div className="profile-banner">
+        <div className="profile-banner-pattern" />
+        <div className="profile-banner-content container">
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="profile-banner-title"
+          >
+            My Account
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="profile-banner-subtitle"
+          >
+            Manage your profile, orders, and preferences
+          </motion.p>
+        </div>
+      </div>
+
+      <section className="profile-section">
+        <div className="container profile-grid">
+          {/* ─── Sidebar ─── */}
+          <motion.aside
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="profile-sidebar"
+          >
+            {/* Avatar Card */}
+            <div className="profile-avatar-card">
+              <div className="profile-avatar">
+                <span>{getInitials()}</span>
+              </div>
+              <h2 className="profile-user-name">{user?.displayName || 'User'}</h2>
+              <p className="profile-user-email">{user?.email}</p>
+              {memberSince && (
+                <div className="profile-member-badge">
+                  <FiCalendar size={12} />
+                  <span>Member since {memberSince}</span>
                 </div>
-                <p className="text-center font-heading text-lg font-semibold text-espresso">{user?.displayName || 'User'}</p>
-                <p className="text-center text-sm text-wood-light">{user?.email}</p>
+              )}
+            </div>
+
+            {/* Quick Links */}
+            <nav className="profile-nav">
+              <Link to="/orders" className="profile-nav-item">
+                <div className="profile-nav-icon"><FiShoppingBag size={18} /></div>
+                <div className="profile-nav-text">
+                  <span className="profile-nav-label">Order History</span>
+                  <span className="profile-nav-desc">View past orders & tracking</span>
+                </div>
+              </Link>
+              <button onClick={() => setWishlistOpen(true)} className="profile-nav-item">
+                <div className="profile-nav-icon"><FiHeart size={18} /></div>
+                <div className="profile-nav-text">
+                  <span className="profile-nav-label">My Wishlist</span>
+                  <span className="profile-nav-desc">Your saved favourites</span>
+                </div>
+              </button>
+              <button onClick={handleLogout} className="profile-nav-item profile-nav-logout">
+                <div className="profile-nav-icon"><FiLogOut size={18} /></div>
+                <div className="profile-nav-text">
+                  <span className="profile-nav-label">Sign Out</span>
+                  <span className="profile-nav-desc">Log out of your account</span>
+                </div>
+              </button>
+            </nav>
+          </motion.aside>
+
+          {/* ─── Main Content ─── */}
+          <div className="profile-main">
+            {/* Profile Information Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="profile-card"
+            >
+              <div className="profile-card-header">
+                <div className="profile-card-title-group">
+                  <div className="profile-card-icon"><FiUser size={18} /></div>
+                  <h2 className="profile-card-title">Profile Information</h2>
+                </div>
+                <button
+                  onClick={() => setEditMode(!editMode)}
+                  className="profile-edit-btn"
+                >
+                  {editMode ? <><FiX size={14} /> Cancel</> : <><FiEdit3 size={14} /> Edit</>}
+                </button>
               </div>
 
-              {/* Navigation Links */}
-              <Link to="/orders" className="flex items-center gap-3 p-4 bg-white rounded-lg border border-wood/5 hover:border-gold/20 transition-all">
-                <FiShoppingBag className="text-gold" size={18} /> <span className="text-sm font-medium">Order History</span>
-              </Link>
-              <Link to="#" onClick={() => {}} className="flex items-center gap-3 p-4 bg-white rounded-lg border border-wood/5 hover:border-gold/20 transition-all">
-                <FiHeart className="text-gold" size={18} /> <span className="text-sm font-medium">My Wishlist</span>
-              </Link>
-            </div>
-
-            {/* Main Content */}
-            <div className="md:col-span-2 space-y-6">
-              {/* Profile Information Section */}
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-lg border border-wood/5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-heading text-xl font-semibold text-espresso">Profile Information</h2>
-                  <button onClick={() => setEditMode(!editMode)} className="text-sm text-gold hover:text-gold-hover flex items-center gap-1">
-                    <FiEdit3 size={14} /> Edit
-                  </button>
-                </div>
-                {editMode ? (
-                  <form onSubmit={handleSubmit(onUpdateProfile)} className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-espresso mb-1 block">Display Name</label>
-                      <input {...register('displayName', { required: 'Name is required' })} className="luxury-input" />
-                      {errors.displayName && <p className="text-error text-xs mt-1">{errors.displayName.message}</p>}
+              {editMode ? (
+                <form onSubmit={handleSubmit(onUpdateProfile)} className="profile-form">
+                  <div className="auth-field">
+                    <label>Display Name</label>
+                    <div className="auth-input-wrap">
+                      <FiUser className="input-icon" size={16} />
+                      <input
+                        {...register('displayName', { required: 'Name is required' })}
+                        className={`luxury-input pl-11 ${errors.displayName ? 'border-error' : ''}`}
+                        placeholder="Your display name"
+                      />
                     </div>
-                    <div className="flex gap-3">
-                      <button type="submit" className="btn-primary text-sm py-2 px-6"><span>Save</span></button>
-                      <button type="button" onClick={() => setEditMode(false)} className="btn-outline text-sm py-2 px-6">Cancel</button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3"><FiUser className="text-wood-light" size={16} /><span className="text-sm">{user?.displayName || 'Not set'}</span></div>
-                    <div className="flex items-center gap-3"><FiMail className="text-wood-light" size={16} /><span className="text-sm">{user?.email}</span></div>
+                    {errors.displayName && <p className="auth-error">{errors.displayName.message}</p>}
                   </div>
-                )}
-              </motion.div>
-
-              {/* Change Password Section */}
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-lg border border-wood/5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-heading text-xl font-semibold text-espresso">Change Password</h2>
-                  <button onClick={() => setChangingPassword(!changingPassword)} className="text-sm text-gold hover:text-gold-hover flex items-center gap-1">
-                    <FiLock size={14} /> Change
-                  </button>
-                </div>
-                {changingPassword && (
-                  <form onSubmit={pwdSubmit(onChangePassword)} className="space-y-4">
+                  <div className="profile-form-actions">
+                    <button type="submit" className="profile-save-btn">
+                      <FiCheck size={16} /> Save Changes
+                    </button>
+                    <button type="button" onClick={() => setEditMode(false)} className="profile-cancel-btn">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="profile-info-grid">
+                  <div className="profile-info-item">
+                    <div className="profile-info-icon"><FiUser size={16} /></div>
                     <div>
-                      <label className="text-sm font-medium text-espresso mb-1 block">New Password</label>
-                      <input {...pwdRegister('newPassword', { required: 'Required', minLength: { value: 6, message: 'Min 6 characters' } })} type="password" className="luxury-input" placeholder="Min 6 characters" />
-                      {pwdErrors.newPassword && <p className="text-error text-xs mt-1">{pwdErrors.newPassword.message}</p>}
+                      <span className="profile-info-label">Full Name</span>
+                      <span className="profile-info-value">{user?.displayName || 'Not set'}</span>
                     </div>
-                    <div className="flex gap-3">
-                      <button type="submit" className="btn-primary text-sm py-2 px-6"><span>Update Password</span></button>
-                      <button type="button" onClick={() => setChangingPassword(false)} className="btn-outline text-sm py-2 px-6">Cancel</button>
+                  </div>
+                  <div className="profile-info-item">
+                    <div className="profile-info-icon"><FiMail size={16} /></div>
+                    <div>
+                      <span className="profile-info-label">Email Address</span>
+                      <span className="profile-info-value">{user?.email}</span>
                     </div>
-                  </form>
-                )}
-              </motion.div>
-            </div>
+                  </div>
+                  <div className="profile-info-item">
+                    <div className="profile-info-icon"><FiShield size={16} /></div>
+                    <div>
+                      <span className="profile-info-label">Email Verified</span>
+                      <span className="profile-info-value">
+                        {user?.emailVerified ? '✓ Verified' : 'Not verified'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Security / Change Password Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="profile-card"
+            >
+              <div className="profile-card-header">
+                <div className="profile-card-title-group">
+                  <div className="profile-card-icon"><FiLock size={18} /></div>
+                  <h2 className="profile-card-title">Security</h2>
+                </div>
+                <button
+                  onClick={() => setChangingPassword(!changingPassword)}
+                  className="profile-edit-btn"
+                >
+                  {changingPassword ? <><FiX size={14} /> Cancel</> : <><FiLock size={14} /> Change Password</>}
+                </button>
+              </div>
+
+              {changingPassword ? (
+                <form onSubmit={pwdSubmit(onChangePassword)} className="profile-form">
+                  <div className="auth-field">
+                    <label>New Password</label>
+                    <div className="auth-input-wrap">
+                      <FiLock className="input-icon" size={16} />
+                      <input
+                        {...pwdRegister('newPassword', {
+                          required: 'Required',
+                          minLength: { value: 6, message: 'Min 6 characters' }
+                        })}
+                        type="password"
+                        className={`luxury-input pl-11 ${pwdErrors.newPassword ? 'border-error' : ''}`}
+                        placeholder="Min 6 characters"
+                      />
+                    </div>
+                    {pwdErrors.newPassword && <p className="auth-error">{pwdErrors.newPassword.message}</p>}
+                  </div>
+                  <div className="profile-form-actions">
+                    <button type="submit" className="profile-save-btn">
+                      <FiCheck size={16} /> Update Password
+                    </button>
+                    <button type="button" onClick={() => setChangingPassword(false)} className="profile-cancel-btn">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="profile-security-status">
+                  <div className="profile-info-item">
+                    <div className="profile-info-icon"><FiLock size={16} /></div>
+                    <div>
+                      <span className="profile-info-label">Password</span>
+                      <span className="profile-info-value">••••••••</span>
+                    </div>
+                  </div>
+                  <p className="profile-security-hint">
+                    For your security, we recommend changing your password periodically.
+                  </p>
+                </div>
+              )}
+            </motion.div>
           </div>
         </div>
       </section>

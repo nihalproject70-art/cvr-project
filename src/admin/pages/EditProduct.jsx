@@ -62,6 +62,10 @@ export default function EditProduct() {
             featured: data.featured || false,
             bestSeller: data.bestSeller || false,
             newArrival: data.newArrival || false,
+            active: data.active !== undefined ? data.active : true,
+            productCode: data.productCode || '',
+            height: data.height || '',
+            weight: data.weight || '',
           });
           setMainImageUrl(data.mainImage || '');
           setMainImagePublicId(data.cloudinaryPublicId || '');
@@ -136,6 +140,10 @@ export default function EditProduct() {
         featured: data.featured,
         bestSeller: data.bestSeller,
         newArrival: data.newArrival,
+        active: data.active,
+        productCode: data.productCode,
+        height: data.height,
+        weight: data.weight,
         mainImage: mainImageUrl,
         cloudinaryPublicId: mainImagePublicId,
         galleryImages: galleryUrls,
@@ -205,6 +213,17 @@ export default function EditProduct() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
+                  Product Code
+                </label>
+                <input
+                  type="text"
+                  {...register('productCode')}
+                  className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
                   SKU (Optional)
                 </label>
                 <input
@@ -246,6 +265,29 @@ export default function EditProduct() {
                 <input
                   type="number"
                   {...register('stock', { required: 'Stock is required', min: 0 })}
+                  className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
+                  Height (inches/cm)
+                </label>
+                <input
+                  type="text"
+                  {...register('height')}
+                  className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-espresso">
+                  Weight (kg/gms)
+                </label>
+                <input
+                  type="text"
+                  {...register('weight')}
                   className="mt-1 block w-full px-3 py-2 border border-wood/10 rounded-md focus:ring-gold focus:border-gold sm:text-sm"
                 />
               </div>
@@ -330,6 +372,18 @@ export default function EditProduct() {
                   />
                   <label htmlFor="newArrival" className="ml-2 text-sm text-espresso font-medium">
                     New Arrival
+                  </label>
+                </div>
+
+                <div className="flex items-center pt-2 border-t border-wood/10 mt-2">
+                  <input
+                    type="checkbox"
+                    id="active"
+                    {...register('active')}
+                    className="h-4 w-4 text-gold border-wood/20 rounded focus:ring-gold"
+                  />
+                  <label htmlFor="active" className="ml-2 text-sm text-espresso font-bold">
+                    Product is Active
                   </label>
                 </div>
               </div>

@@ -268,7 +268,8 @@ export default function Products() {
                     />
                   </th>
                   <th className="p-4">Image</th>
-                  <th className="p-4">Name / SKU</th>
+                  <th className="p-4">Name / SKU / Code</th>
+                  <th className="p-4">Status</th>
                   <th className="p-4">Category</th>
                   <th className="p-4">Price</th>
                   <th className="p-4">Stock</th>
@@ -295,7 +296,16 @@ export default function Products() {
                     </td>
                     <td className="p-4">
                       <div className="font-semibold text-espresso">{prod.name}</div>
-                      <div className="text-xs text-wood-light mt-0.5">SKU: {prod.sku || 'N/A'}</div>
+                      <div className="text-xs text-wood-light mt-0.5">
+                        SKU: {prod.sku || 'N/A'} {prod.productCode && ` | Code: ${prod.productCode}`}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        prod.active !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {prod.active !== false ? 'Active' : 'Inactive'}
+                      </span>
                     </td>
                     <td className="p-4 text-wood-light">{prod.category}</td>
                     <td className="p-4">

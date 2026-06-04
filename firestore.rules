@@ -4,7 +4,8 @@ service cloud.firestore {
     // Admin check
     function isAdmin() {
       return request.auth != null &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+        (request.auth.token.email == 'jayaharisb@gmail.com' ||
+         exists(/databases/$(database)/documents/admins/$(request.auth.token.email)));
     }
 
     // Products: public read, admin write
@@ -46,9 +47,21 @@ service cloud.firestore {
         request.auth.uid == userId;
     }
 
-    // Settings: admin only
-    match /settings/{doc} {
+    // Banners: public read, admin write
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Notifications: admin only
+    match /notifications/{notifId} {
       allow read, write: if isAdmin();
+    }
+
+    // Settings: public read (for homepage/payments), admin write
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Admin emails: admin only

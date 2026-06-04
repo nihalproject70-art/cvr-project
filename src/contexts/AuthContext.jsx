@@ -24,7 +24,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [isFirebaseConfigured] = useState(!!auth);
 
@@ -32,22 +32,22 @@ export const AuthProvider = ({ children }) => {
   const checkAdminStatus = useCallback(async (email) => {
     if (!email || !db) {
       setIsAdmin(false);
-      setIsSuperAdmin(false);
       return;
     }
     try {
+      if (email.toLowerCase() === 'jayaharisb@gmail.com') {
+        setIsAdmin(true);
+        return;
+      }
       const adminDoc = await getDoc(doc(db, 'admins', email));
       if (adminDoc.exists()) {
         setIsAdmin(true);
-        setIsSuperAdmin(adminDoc.data().role === 'superAdmin');
       } else {
         setIsAdmin(false);
-        setIsSuperAdmin(false);
       }
     } catch (error) {
       console.error('Admin check error:', error);
       setIsAdmin(false);
-      setIsSuperAdmin(false);
     }
   }, []);
 
@@ -81,7 +81,6 @@ export const AuthProvider = ({ children }) => {
         }
       } else {
         setIsAdmin(false);
-        setIsSuperAdmin(false);
       }
       setLoading(false);
     });
@@ -141,7 +140,6 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     isAdmin,
-    isSuperAdmin,
     loading,
     login,
     register,
