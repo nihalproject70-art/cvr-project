@@ -35,34 +35,34 @@ export default function Categories() {
           </div>
 
           <div className="categories-grid">
-            {/* Category 1: Wooden Sculptures */}
+            {/* Category 1: Brass Items */}
             <div className="category-card">
               <div className="category-card-bg">
-                <img src="/assets/cat_sculptures.png" alt="Luxurious hand-carved wooden sculptures" loading="lazy" />
+                <img src="/assets/cat_brass_items.png" alt="Elegant brass statues, lamps, pooja items, and traditional brass handicrafts." loading="lazy" />
               </div>
               <div className="category-card-overlay"></div>
               <div className="category-card-content">
-                <h3>Wooden Sculptures</h3>
-                <Link to="/category/wooden-sculptures" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
+                <h3>Brass Items</h3>
+                <Link to="/category/brass-items" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
               </div>
             </div>
 
-            {/* Category 2: Wooden Masks */}
+            {/* Category 2: Mandirs */}
             <div className="category-card">
               <div className="category-card-bg">
-                <img src="/assets/cat_masks.png" alt="Traditional carved wooden masks" loading="lazy" />
+                <img src="/assets/cat_mandirs.png" alt="Premium wooden and decorative pooja mandirs for homes." loading="lazy" />
               </div>
               <div className="category-card-overlay"></div>
               <div className="category-card-content">
-                <h3>Wooden Masks</h3>
-                <Link to="/category/wooden-masks" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
+                <h3>Mandirs</h3>
+                <Link to="/category/mandirs" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
               </div>
             </div>
 
             {/* Category 3: Home Decor */}
             <div className="category-card">
               <div className="category-card-bg">
-                <img src="/assets/cat_decor.png" alt="Handcrafted wooden home decor items" loading="lazy" />
+                <img src="/assets/cat_home_decor.png" alt="Decorative home accessories, vases, wall decor, and interior styling products." loading="lazy" />
               </div>
               <div className="category-card-overlay"></div>
               <div className="category-card-content">
@@ -71,22 +71,22 @@ export default function Categories() {
               </div>
             </div>
 
-            {/* Category 4: Wall Art */}
+            {/* Category 4: Sandalwood Maalai */}
             <div className="category-card">
               <div className="category-card-bg">
-                <img src="/assets/cat_wall_art.png" alt="Bespoke geometric wood carved wall art panels" loading="lazy" />
+                <img src="/assets/cat_sandalwood_maalai.png" alt="Traditional sandalwood malas, spiritual accessories, and religious items." loading="lazy" />
               </div>
               <div className="category-card-overlay"></div>
               <div className="category-card-content">
-                <h3>Wall Art</h3>
-                <Link to="/category/wall-art" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
+                <h3>Sandalwood Maalai</h3>
+                <Link to="/category/sandalwood-maalai" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
               </div>
             </div>
 
             {/* Category 5: Gift Items */}
             <div className="category-card">
               <div className="category-card-bg">
-                <img src="/assets/cat_gift.png" alt="Premium handcrafted wood gifting items" loading="lazy" />
+                <img src="/assets/cat_gift_items_new.png" alt="Corporate gifts, return gifts, customized gifts, and special occasion gifts." loading="lazy" />
               </div>
               <div className="category-card-overlay"></div>
               <div className="category-card-content">
@@ -95,15 +95,15 @@ export default function Categories() {
               </div>
             </div>
 
-            {/* Category 6: Custom Handicrafts */}
+            {/* Category 6: Wooden Art Work */}
             <div className="category-card">
               <div className="category-card-bg">
-                <img src="/assets/cat_custom.png" alt="Artisan hand-carving custom designs in wood workshop" loading="lazy" />
+                <img src="/assets/cat_wooden_art.png" alt="Wooden carvings, sculptures, handcrafted wooden products, and artistic creations." loading="lazy" />
               </div>
               <div className="category-card-overlay"></div>
               <div className="category-card-content">
-                <h3>Custom Handicrafts</h3>
-                <Link to="/contact" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
+                <h3>Wooden Art Work</h3>
+                <Link to="/category/wooden-art-work" className="btn-category">View Products <i className="fa-solid fa-arrow-right"></i></Link>
               </div>
             </div>
           </div>

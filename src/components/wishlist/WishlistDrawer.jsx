@@ -23,7 +23,7 @@ export const WishlistDrawer = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-espresso/50 z-50"
+            className="fixed inset-0 bg-espresso/50 z-[200]"
             onClick={() => setIsOpen(false)}
           />
           <motion.div
@@ -31,7 +31,7 @@ export const WishlistDrawer = () => {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white z-50 flex flex-col shadow-2xl"
+            className="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white z-[201] flex flex-col shadow-2xl"
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-wood/10">
               <div className="flex items-center gap-2">

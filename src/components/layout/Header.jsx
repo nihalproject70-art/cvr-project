@@ -39,14 +39,11 @@ export const Header = ({ onSearchOpen }) => {
     navigate('/');
   };
 
-  // Utility styles for desktop-only items since we removed Tailwind from this component
-  // We can just use standard media queries or rely on the fact that these are small tweaks.
-  // We'll use inline styles with simple logic or rely on the CSS classes if they exist.
-  // For now, let's keep them visible. The custom CSS handles most of it.
+  const isHome = location.pathname === '/';
 
   return (
     <>
-      <header className={`header-wrapper ${isScrolled ? 'sticky' : ''}`} id="mainHeader">
+      <header className={`header-wrapper ${isScrolled ? 'sticky' : ''} ${isHome ? 'home-theme' : 'white-theme'}`} id="mainHeader">
         <div className="container header-container">
           {/* Brand Logo */}
           <div className="logo">
@@ -72,37 +69,21 @@ export const Header = ({ onSearchOpen }) => {
           {/* Actions Panel (Search, Cart, Menu) */}
           <div className="header-actions">
             {/* Search Button Toggle */}
-            <button className="action-icon-btn" onClick={onSearchOpen} aria-label="Open Search">
+            <button className="action-icon-btn" onClick={onSearchOpen} id="searchOpenBtn" aria-label="Open Search Searchbar">
               <i className="fa-solid fa-magnifying-glass"></i>
             </button>
             
-            {/* Wishlist Button Toggle (From original react app) */}
-            <button className="action-icon-btn" onClick={() => setWishlistOpen(true)} aria-label="Open Wishlist">
-              <i className="fa-regular fa-heart"></i>
-              {wishlistCount > 0 && (
-                <span className="cart-count-badge" style={{ backgroundColor: 'var(--color-error)' }}>
-                  {wishlistCount}
-                </span>
-              )}
-            </button>
-
             {/* Shopping Cart Toggle */}
-            <button className="action-icon-btn" onClick={() => setCartOpen(true)} aria-label="Open Shopping Cart">
+            <button className="action-icon-btn" onClick={() => setCartOpen(true)} id="cartOpenBtn" aria-label="Open Shopping Cart">
               <i className="fa-solid fa-bag-shopping"></i>
-              {cartCount > 0 && (
-                <span className="cart-count-badge">{cartCount}</span>
-              )}
+              <span className="cart-count-badge" id="cartCountBadge">{cartCount}</span>
             </button>
-
-            {/* Desktop Auth Links */}
-            <div className="hidden lg:flex" style={{ display: 'none' }}>
-               {/* We don't have tailwind 'hidden lg:flex' readily working without tailwind, but we kept tailwind imported in index.css so it might work. If not, we will rely on CSS. Let's just use CSS. */}
-            </div>
 
             {/* Mobile Navigation Hamburger */}
             <button 
               className={`hamburger-btn ${mobileOpen ? 'active' : ''}`} 
               onClick={() => setMobileOpen(!mobileOpen)}
+              id="mobileMenuToggle"
               aria-expanded={mobileOpen} 
               aria-label="Toggle Mobile Navigation Menu"
             >
@@ -114,7 +95,7 @@ export const Header = ({ onSearchOpen }) => {
         </div>
 
         {/* Mobile Navigation Panel */}
-        <div className={`mobile-nav-panel ${mobileOpen ? 'active' : ''}`} aria-label="Mobile Navigation Drawer">
+        <div className={`mobile-nav-panel ${mobileOpen ? 'active' : ''}`} id="mobileNavPanel" aria-label="Mobile Navigation Drawer">
           <nav className="mobile-menu">
             {navLinks.map((link) => (
               <Link
@@ -126,20 +107,6 @@ export const Header = ({ onSearchOpen }) => {
                 {link.name}
               </Link>
             ))}
-            {user ? (
-              <>
-                <Link to={isAdmin ? '/admin/dashboard' : '/profile'} className="nav-link" onClick={() => setMobileOpen(false)}>
-                  {isAdmin ? 'Admin Panel' : 'My Account'}
-                </Link>
-                <button onClick={handleLogout} className="nav-link" style={{ textAlign: 'left', cursor: 'pointer', background: 'none', border: 'none', width: '100%', padding: '1rem 0' }}>
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link to="/login" className="nav-link" onClick={() => setMobileOpen(false)}>
-                Sign In
-              </Link>
-            )}
           </nav>
           <div className="mobile-nav-footer">
             <a href="tel:+918807173498"><i className="fa-solid fa-phone"></i> +91 88071 73498</a>

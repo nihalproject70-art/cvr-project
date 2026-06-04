@@ -15,11 +15,12 @@ export default function Category() {
   const { addToCart } = useCart();
 
   const categoryMap = {
-    'wooden-sculptures': { title: 'Wooden Sculptures', subtitle: 'Heritage in Form' },
-    'wooden-masks': { title: 'Wooden Masks', subtitle: 'Ancestral Heritage' },
+    'brass-items': { title: 'Brass Items', subtitle: 'Traditional Excellence' },
+    'mandirs': { title: 'Mandirs', subtitle: 'Divine Sanctuaries' },
     'home-decor': { title: 'Home Decor', subtitle: 'Artistry in Living' },
-    'wall-art': { title: 'Wall Art Panels', subtitle: 'Rustic Elevations' },
-    'gift-items': { title: 'Luxury Gift Items', subtitle: 'Bespoke Offerings' }
+    'sandalwood-maalai': { title: 'Sandalwood Maalai', subtitle: 'Spiritual Purity' },
+    'gift-items': { title: 'Gift Items', subtitle: 'Bespoke Offerings' },
+    'wooden-art-work': { title: 'Wooden Art Work', subtitle: 'Heritage in Form' }
   };
 
   const currentCategory = categoryMap[slug] || { title: slug.replace('-', ' '), subtitle: 'Category' };
