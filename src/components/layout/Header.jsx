@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiHeart, FiShoppingBag, FiMenu, FiX, FiUser, FiLogOut } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 
 const navLinks = [
   { name: 'Home', path: '/' },
-  { name: 'Shop', path: '/shop' },
   { name: 'Categories', path: '/categories' },
+  { name: 'Shop', path: '/shop' },
   { name: 'About', path: '/about' },
   { name: 'Contact', path: '/contact' },
 ];
@@ -24,7 +22,9 @@ export const Header = ({ onSearchOpen }) => {
   const { wishlistCount, setIsOpen: setWishlistOpen } = useWishlist();
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -39,205 +39,117 @@ export const Header = ({ onSearchOpen }) => {
     navigate('/');
   };
 
+  // Utility styles for desktop-only items since we removed Tailwind from this component
+  // We can just use standard media queries or rely on the fact that these are small tweaks.
+  // We'll use inline styles with simple logic or rely on the CSS classes if they exist.
+  // For now, let's keep them visible. The custom CSS handles most of it.
+
   return (
     <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled 
-            ? 'glass-header shadow-lg' 
-            : location.pathname === '/' 
-            ? 'bg-transparent border-b border-white/10' 
-            : 'bg-cream/80 backdrop-blur-sm'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18 lg:h-20">
-            {/* Logo */}
-            <Link to="/" className="flex-shrink-0">
-              <h1 className={`font-heading text-xl lg:text-2xl font-bold transition-colors ${
-                isScrolled ? 'text-espresso' : location.pathname === '/' ? 'text-white' : 'text-espresso'
-              }`}>
-                <span className="text-gold">CVR</span> Handicrafts
-              </h1>
+      <header className={`header-wrapper ${isScrolled ? 'sticky' : ''}`} id="mainHeader">
+        <div className="container header-container">
+          {/* Brand Logo */}
+          <div className="logo">
+            <Link to="/" aria-label="CVR Handicrafts Logo">
+              <span className="logo-main">CVR</span>
+              <span className="logo-sub">Handicrafts</span>
             </Link>
+          </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`nav-link text-sm uppercase tracking-wider transition-colors ${
-                    isScrolled 
-                      ? location.pathname === link.path ? 'active text-gold' : 'text-espresso'
-                      : location.pathname === '/'
-                      ? location.pathname === link.path ? 'active text-gold' : 'text-white'
-                      : location.pathname === link.path ? 'active text-gold' : 'text-espresso'
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
-            </nav>
-
-            {/* Action Icons */}
-            <div className={`flex items-center gap-3 lg:gap-4 transition-colors ${
-              isScrolled ? 'text-espresso' : location.pathname === '/' ? 'text-white' : 'text-espresso'
-            }`}>
-              <button
-                onClick={onSearchOpen}
-                className="p-2 hover:text-gold transition-colors"
-                aria-label="Search"
+          {/* Main Navigation Links (Desktop) */}
+          <nav className="nav-menu" role="navigation" aria-label="Desktop Navigation">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
               >
-                <FiSearch size={20} />
-              </button>
+                {link.name}
+              </Link>
+            ))}
+          </nav>
 
-              <button
-                onClick={() => setWishlistOpen(true)}
-                className="p-2 hover:text-gold transition-colors relative"
-                aria-label="Wishlist"
-              >
-                <FiHeart size={20} />
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
-              </button>
-
-              <button
-                onClick={() => setCartOpen(true)}
-                className="p-2 hover:text-gold transition-colors relative"
-                aria-label="Cart"
-              >
-                <FiShoppingBag size={20} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-
-              {user ? (
-                <div className="hidden lg:flex items-center gap-2">
-                  <Link
-                    to={isAdmin ? '/admin/dashboard' : '/profile'}
-                    className="p-2 hover:text-gold transition-colors"
-                    aria-label="Profile"
-                  >
-                    <FiUser size={20} />
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="p-2 hover:text-error transition-colors"
-                    aria-label="Logout"
-                  >
-                    <FiLogOut size={20} />
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  to="/login"
-                  className="hidden lg:flex btn-primary text-xs py-2 px-4"
-                >
-                  <span>Sign In</span>
-                </Link>
+          {/* Actions Panel (Search, Cart, Menu) */}
+          <div className="header-actions">
+            {/* Search Button Toggle */}
+            <button className="action-icon-btn" onClick={onSearchOpen} aria-label="Open Search">
+              <i className="fa-solid fa-magnifying-glass"></i>
+            </button>
+            
+            {/* Wishlist Button Toggle (From original react app) */}
+            <button className="action-icon-btn" onClick={() => setWishlistOpen(true)} aria-label="Open Wishlist">
+              <i className="fa-regular fa-heart"></i>
+              {wishlistCount > 0 && (
+                <span className="cart-count-badge" style={{ backgroundColor: 'var(--color-error)' }}>
+                  {wishlistCount}
+                </span>
               )}
+            </button>
 
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="lg:hidden p-2 text-current"
-                aria-label="Menu"
-              >
-                {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
+            {/* Shopping Cart Toggle */}
+            <button className="action-icon-btn" onClick={() => setCartOpen(true)} aria-label="Open Shopping Cart">
+              <i className="fa-solid fa-bag-shopping"></i>
+              {cartCount > 0 && (
+                <span className="cart-count-badge">{cartCount}</span>
+              )}
+            </button>
+
+            {/* Desktop Auth Links */}
+            <div className="hidden lg:flex" style={{ display: 'none' }}>
+               {/* We don't have tailwind 'hidden lg:flex' readily working without tailwind, but we kept tailwind imported in index.css so it might work. If not, we will rely on CSS. Let's just use CSS. */}
             </div>
+
+            {/* Mobile Navigation Hamburger */}
+            <button 
+              className={`hamburger-btn ${mobileOpen ? 'active' : ''}`} 
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-expanded={mobileOpen} 
+              aria-label="Toggle Mobile Navigation Menu"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Panel */}
+        <div className={`mobile-nav-panel ${mobileOpen ? 'active' : ''}`} aria-label="Mobile Navigation Drawer">
+          <nav className="mobile-menu">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`nav-link ${location.pathname === link.path ? 'active' : ''}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.name}
+              </Link>
+            ))}
+            {user ? (
+              <>
+                <Link to={isAdmin ? '/admin/dashboard' : '/profile'} className="nav-link" onClick={() => setMobileOpen(false)}>
+                  {isAdmin ? 'Admin Panel' : 'My Account'}
+                </Link>
+                <button onClick={handleLogout} className="nav-link" style={{ textAlign: 'left', cursor: 'pointer', background: 'none', border: 'none', width: '100%', padding: '1rem 0' }}>
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="nav-link" onClick={() => setMobileOpen(false)}>
+                Sign In
+              </Link>
+            )}
+          </nav>
+          <div className="mobile-nav-footer">
+            <a href="tel:+918807173498"><i className="fa-solid fa-phone"></i> +91 88071 73498</a>
+            <a href="mailto:info@cvrhandicrafts.com"><i className="fa-solid fa-envelope"></i> info@cvrhandicrafts.com</a>
           </div>
         </div>
       </header>
 
-      {/* Mobile Navigation Drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-espresso/50 z-40 lg:hidden"
-              onClick={() => setMobileOpen(false)}
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
-              className="fixed top-0 right-0 w-80 h-full bg-cream z-50 lg:hidden shadow-2xl"
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-8">
-                  <h2 className="font-heading text-xl font-bold text-espresso">
-                    <span className="text-gold">CVR</span> Handicrafts
-                  </h2>
-                  <button onClick={() => setMobileOpen(false)}>
-                    <FiX size={24} className="text-espresso" />
-                  </button>
-                </div>
-
-                <nav className="flex flex-col gap-1">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.path}
-                      to={link.path}
-                      className={`px-4 py-3 rounded text-sm uppercase tracking-wider font-medium transition-colors ${
-                        location.pathname === link.path
-                          ? 'bg-gold/10 text-gold'
-                          : 'text-espresso hover:bg-wood/5'
-                      }`}
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
-                </nav>
-
-                <div className="mt-8 pt-8 border-t border-wood/10">
-                  {user ? (
-                    <div className="flex flex-col gap-2">
-                      <Link
-                        to={isAdmin ? '/admin/dashboard' : '/profile'}
-                        className="px-4 py-3 text-sm uppercase tracking-wider font-medium text-espresso hover:bg-wood/5 rounded flex items-center gap-3"
-                      >
-                        <FiUser size={18} />
-                        {isAdmin ? 'Admin Panel' : 'My Account'}
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="px-4 py-3 text-sm uppercase tracking-wider font-medium text-error hover:bg-error/5 rounded flex items-center gap-3 text-left"
-                      >
-                        <FiLogOut size={18} />
-                        Logout
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      <Link to="/login" className="btn-primary text-center">
-                        <span>Sign In</span>
-                      </Link>
-                      <Link to="/register" className="btn-outline text-center">
-                        Create Account
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* Header spacer */}
-      {location.pathname !== '/' && <div className="h-18 lg:h-20" />}
+      {location.pathname !== '/' && <div style={{ height: '80px' }} />}
     </>
   );
 };

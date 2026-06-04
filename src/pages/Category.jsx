@@ -1,145 +1,114 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { collection, query, where, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/services/firebase';
-import { getDocsWithTimeout } from '@/utils/helpers';
-import { mockProducts } from '@/utils/mockData';
-import { SEOHead, BreadcrumbSchema } from '@/components/seo/SEOHead';
-import { ProductCard } from '@/components/product/ProductCard';
-import { ProductGridSkeleton } from '@/components/ui/Skeleton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { FiChevronRight } from 'react-icons/fi';
+import { useCart } from '@/contexts/CartContext';
+import { SEOHead } from '@/components/seo/SEOHead';
+import { formatPrice, getDocsWithTimeout } from '@/utils/helpers';
+import { getOptimizedUrl } from '@/services/cloudinary';
+import toast from 'react-hot-toast';
 
-const Category = () => {
+export default function Category() {
   const { slug } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
+  const { addToCart } = useCart();
 
-  const categoryName = slug
-    ?.split('-')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  const categoryMap = {
+    'wooden-sculptures': { title: 'Wooden Sculptures', subtitle: 'Heritage in Form' },
+    'wooden-masks': { title: 'Wooden Masks', subtitle: 'Ancestral Heritage' },
+    'home-decor': { title: 'Home Decor', subtitle: 'Artistry in Living' },
+    'wall-art': { title: 'Wall Art Panels', subtitle: 'Rustic Elevations' },
+    'gift-items': { title: 'Luxury Gift Items', subtitle: 'Bespoke Offerings' }
+  };
 
-  const fetchProducts = useCallback(async (isLoadMore = false) => {
-    if (isLoadMore) setLoadingMore(true);
-    else setLoading(true);
-    try {
-      const constraints = [
-        where('category', '==', categoryName),
-        orderBy('createdAt', 'desc'),
-        limit(12),
-      ];
-      if (isLoadMore && lastDoc) constraints.push(startAfter(lastDoc));
-      const q = query(collection(db, 'products'), ...constraints);
-
-      let fetchedProducts = [];
-      let snapshotDocs = [];
-      let isFallback = false;
-
-      try {
-        const snapshot = await getDocsWithTimeout(q, 1500);
-        fetchedProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        snapshotDocs = snapshot.docs;
-      } catch (error) {
-        console.error('Error fetching products from Firestore, using mock fallback:', error);
-        isFallback = true;
-      }
-
-      if (fetchedProducts.length === 0) {
-        isFallback = true;
-      }
-
-      if (isFallback) {
-        // Filter mock products by categoryName
-        let items = mockProducts.filter(p => p.category === categoryName);
-        items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        const startIndex = isLoadMore ? products.length : 0;
-        const endIndex = startIndex + 12;
-        const pageItems = items.slice(startIndex, endIndex);
-
-        if (isLoadMore) setProducts(prev => [...prev, ...pageItems]);
-        else setProducts(pageItems);
-
-        setLastDoc(null);
-        setHasMore(items.length > endIndex);
-      } else {
-        if (isLoadMore) setProducts(prev => [...prev, ...fetchedProducts]);
-        else setProducts(fetchedProducts);
-        setLastDoc(snapshotDocs[snapshotDocs.length - 1] || null);
-        setHasMore(snapshotDocs.length === 12);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [categoryName, lastDoc, products.length]);
+  const currentCategory = categoryMap[slug] || { title: slug.replace('-', ' '), subtitle: 'Category' };
 
   useEffect(() => {
-    setProducts([]);
-    setLastDoc(null);
-    setHasMore(true);
-    fetchProducts(false);
-  }, [slug]);
+    const fetchCategoryProducts = async () => {
+      try {
+        const q = query(
+          collection(db, 'products'),
+          where('category', '==', slug)
+        );
+        const snapshot = await getDocsWithTimeout(q, 2000);
+        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        if (fetchedProducts.length > 0) {
+          setProducts(fetchedProducts);
+        } else {
+          // fallback if no products found in firestore
+          setProducts([
+            { id: 'fallback-1', name: `Premium ${currentCategory.title} Item`, salePrice: 150.00, mainImage: '/assets/cat_sculptures.png', category: slug, shortDescription: 'Handcrafted Wood' }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching category products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategoryProducts();
+  }, [slug, currentCategory.title]);
+
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    toast.success(`${product.name} added to cart!`);
+  };
 
   return (
     <>
-      <SEOHead
-        title={`${categoryName} | CVR Handicrafts`}
-        description={`Explore our ${categoryName} collection. Premium handcrafted products by CVR Handicrafts.`}
-        canonical={`${window.location.origin}/category/${slug}`}
-      />
-      <BreadcrumbSchema items={[
-        { name: 'Home', url: '/' },
-        { name: 'Shop', url: '/shop' },
-        { name: categoryName },
-      ]} />
+      <SEOHead title={`CVR Handicrafts | ${currentCategory.title}`} />
 
-      <section className="bg-espresso py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <nav className="flex items-center justify-center gap-2 text-sm text-white/50 mb-4">
-            <Link to="/" className="hover:text-gold transition-colors">Home</Link>
-            <FiChevronRight size={12} />
-            <Link to="/shop" className="hover:text-gold transition-colors">Shop</Link>
-            <FiChevronRight size={12} />
-            <span className="text-gold">{categoryName}</span>
-          </nav>
-          <h1 className="font-heading text-3xl lg:text-4xl text-white">{categoryName}</h1>
+      {/* Category Banner */}
+      <section className="section-padding" style={{ backgroundColor: 'var(--color-cream)', paddingBottom: 0 }}>
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="italic-sub">{currentCategory.subtitle}</span>
+            <h2 style={{ textTransform: 'capitalize' }}>{currentCategory.title}</h2>
+          </div>
         </div>
       </section>
 
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {loading ? (
-            <ProductGridSkeleton count={12} />
-          ) : products.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map(p => <ProductCard key={p.id} product={p} />)}
-              </div>
-              {hasMore && (
-                <div className="text-center mt-10">
-                  <button onClick={() => fetchProducts(true)} disabled={loadingMore} className="btn-outline">
-                    {loadingMore ? 'Loading...' : 'Load More'}
-                  </button>
+      {/* Product Grid */}
+      <section className="section-padding" style={{ backgroundColor: 'var(--color-white)' }}>
+        <div className="container">
+          <div className="product-category-group">
+            <div className="product-grid">
+              {products.map(product => (
+                <div className="product-card" key={product.id}>
+                  {product.isBestSeller && <span className="product-badge product-badge-bestseller">Best Seller</span>}
+                  <div className="product-card-image">
+                    <img src={getOptimizedUrl(product.mainImage || product.image || '/assets/cat_sculptures.png', { width: 400 })} alt={product.name} loading="lazy" />
+                    <div className="product-actions-overlay">
+                      <Link to={`/product/${product.slug || product.id}`} className="product-action-btn" aria-label={`Quick view ${product.name}`}>
+                        <i className="fa-regular fa-eye"></i>
+                      </Link>
+                      <button className="product-action-btn add-to-cart-btn" onClick={() => handleAddToCart(product)} aria-label={`Add ${product.name} to cart`}>
+                        <i className="fa-solid fa-cart-plus"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="product-info">
+                    <span className="product-meta">{product.shortDescription || currentCategory.title}</span>
+                    <h4 className="product-title">{product.name}</h4>
+                    <span className="product-price">{formatPrice(product.salePrice || product.price)}</span>
+                    <button className="product-mobile-add-btn add-to-cart-btn" onClick={() => handleAddToCart(product)}>
+                      <i className="fa-solid fa-cart-plus"></i> Add to Cart
+                    </button>
+                  </div>
                 </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-20">
-              <p className="font-heading text-xl text-espresso mb-2">No products in this category</p>
-              <Link to="/shop" className="text-gold hover:text-gold-hover transition-colors">Browse all products</Link>
+              ))}
             </div>
-          )}
+
+            {loading && <div className="text-center" style={{ padding: '40px 0' }}>Loading products...</div>}
+
+            {!loading && products.length === 0 && (
+              <div className="text-center" style={{ padding: '40px 0' }}>No products found in this category.</div>
+            )}
+          </div>
         </div>
       </section>
     </>
   );
-};
-
-export default Category;
+}

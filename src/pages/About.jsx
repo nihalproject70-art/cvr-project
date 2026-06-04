@@ -1,72 +1,68 @@
-import { motion } from 'framer-motion';
-import { FiAward, FiHeart, FiTarget } from 'react-icons/fi';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { SEOHead } from '@/components/seo/SEOHead';
 
-const About = () => (
-  <>
-    <SEOHead
-      title="About Us | CVR Handicrafts"
-      description="Learn about CVR Handicrafts - our story, mission, and commitment to preserving traditional Indian craftsmanship."
-    />
+export default function About() {
+  useEffect(() => {
+    // Reveal animation logic
+    const handleScroll = () => {
+      const reveals = document.querySelectorAll('.reveal-element');
+      for (let i = 0; i < reveals.length; i++) {
+        const windowHeight = window.innerHeight;
+        const elementTop = reveals[i].getBoundingClientRect().top;
+        const elementVisible = 100;
+        if (elementTop < windowHeight - elementVisible) {
+          reveals[i].classList.add('active');
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-    <section className="bg-espresso py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <p className="text-gold text-sm uppercase tracking-[0.3em] font-semibold mb-3">Our Story</p>
-        <h1 className="font-heading text-3xl lg:text-4xl text-white">About CVR Handicrafts</h1>
-      </div>
-    </section>
-
-    <section className="py-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="aspect-[4/3] rounded-lg overflow-hidden bg-gradient-to-br from-wood/20 to-gold/10 flex items-center justify-center"
-          >
-            <div className="text-center p-8">
-              <p className="font-heading text-5xl text-wood/30">✦</p>
-              <p className="font-heading text-lg text-wood/40 mt-4">Our Workshop</p>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-            <p className="text-wood-light text-sm uppercase tracking-[0.3em] font-semibold mb-3">Heritage & Craft</p>
-            <h2 className="font-heading text-3xl font-bold text-espresso mb-6">Preserving Tradition, Crafting Excellence</h2>
-            <div className="space-y-4 text-wood-light leading-relaxed">
-              <p>CVR Handicrafts is a premium artisan brand dedicated to preserving and promoting India's rich tradition of handcraftsmanship. Founded with a passion for wooden artistry and brass sculpting, we bring the finest handcrafted products to homes across India.</p>
-              <p>Every piece in our collection is handcrafted by skilled artisans who have inherited techniques passed down through generations. From exquisite wooden furniture to sacred brass idols, each product reflects the dedication and mastery of traditional craftsmanship.</p>
-              <p>We source the finest raw materials and employ time-honored techniques to create pieces that are not just products, but works of art that tell stories of heritage, devotion, and artistic excellence.</p>
-            </div>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
-          {[
-            { icon: FiTarget, title: 'Our Mission', desc: 'To make premium handcrafted products accessible while supporting artisan communities and preserving traditional craft techniques.' },
-            { icon: FiHeart, title: 'Our Values', desc: 'Quality craftsmanship, sustainable practices, fair artisan wages, and authentic traditional techniques in every product we create.' },
-            { icon: FiAward, title: 'Our Vision', desc: 'To be India\'s leading luxury handicrafts brand, connecting artisans with discerning customers who appreciate fine craftsmanship.' },
-          ].map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-              className="bg-white p-8 rounded-lg border border-wood/5 text-center"
-            >
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gold/10 flex items-center justify-center">
-                <item.icon className="text-gold" size={24} />
+  return (
+    <>
+      <SEOHead title="CVR Handicrafts | About - Our Heritage & Artistry" />
+      
+      {/* 10. ABOUT US SECTION */}
+      <section className="section-padding reveal-element" id="about" style={{ backgroundColor: 'var(--color-white)' }}>
+        <div className="container">
+          <div className="about-grid">
+            {/* Left: Collage */}
+            <div className="about-image-wrapper">
+              <div className="about-image-frame">
+                <img src="/assets/cat_custom.png" alt="CVR Handicrafts Master Artisan Workshop Carver" loading="lazy" />
               </div>
-              <h3 className="font-heading text-xl font-semibold text-espresso mb-3">{item.title}</h3>
-              <p className="text-sm text-wood-light leading-relaxed">{item.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  </>
-);
+            </div>
 
-export default About;
+            {/* Right: Content */}
+            <div className="about-content">
+              <span className="italic-sub">The Soul of the Wood</span>
+              <h2>Our Heritage & Journey</h2>
+              <p>At CVR Handicrafts, our story is etched directly in wood. Founded as a small family woodshop three decades ago, we have committed ourselves to preserving traditional Indian chiseled handicrafts for global modern homes.</p>
+              <p>We source only high-density, ethically harvested logs of teakwood, mahogany, rosewood, and cedar. Every fine line and organic curve is sculpted manually, utilizing traditional heritage chisels, ensuring no two creations are ever fully identical. Our mission is to keep this spectacular, ancient art alive, honoring the dedicated woodcarvers who pour their soul into every creation.</p>
+              
+              <div className="about-metrics">
+                <div className="metric-item">
+                  <span className="metric-num">30+</span>
+                  <span className="metric-lbl">Years Heritage</span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-num">15+</span>
+                  <span className="metric-lbl">Master Artisans</span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-num">10k+</span>
+                  <span className="metric-lbl">Homes Adorned</span>
+                </div>
+              </div>
+              
+              <Link to="/contact" className="btn btn-primary">Connect With Us</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}

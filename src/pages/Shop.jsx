@@ -1,301 +1,130 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { collection, query, where, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/services/firebase';
-import { getDocsWithTimeout } from '@/utils/helpers';
-import { mockProducts } from '@/utils/mockData';
+import { useCart } from '@/contexts/CartContext';
 import { SEOHead } from '@/components/seo/SEOHead';
-import { ProductCard } from '@/components/product/ProductCard';
-import { QuickViewModal } from '@/components/product/QuickViewModal';
-import { ProductGridSkeleton } from '@/components/ui/Skeleton';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { useDebounce } from '@/hooks/useDebounce';
-import { FiSearch, FiFilter, FiX, FiChevronDown } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { formatPrice, getDocsWithTimeout } from '@/utils/helpers';
+import { getOptimizedUrl } from '@/services/cloudinary';
+import toast from 'react-hot-toast';
 
-const PRODUCTS_PER_PAGE = 12;
-
-const sortOptions = [
-  { label: 'Newest First', value: 'newest' },
-  { label: 'Price: Low to High', value: 'price-asc' },
-  { label: 'Price: High to Low', value: 'price-desc' },
-  { label: 'Popularity', value: 'popular' },
-];
-
-const categoryList = [
-  'All', 'Wooden Furniture', 'Brass Idols', 'Home Decor',
-  'Wall Art', 'Pooja Items', 'Wooden Toys', 'Gift Collections',
-];
-
-const Shop = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+export default function Shop() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [lastDoc, setLastDoc] = useState(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'All');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const debouncedSearch = useDebounce(search, 300);
+  const { addToCart } = useCart();
 
-  const fetchProducts = useCallback(async (isLoadMore = false) => {
-    if (isLoadMore) setLoadingMore(true);
-    else setLoading(true);
-
-    try {
-      const constraints = [];
-      if (selectedCategory !== 'All') {
-        constraints.push(where('category', '==', selectedCategory));
-      }
-
-      switch (sortBy) {
-        case 'price-asc': constraints.push(orderBy('price', 'asc')); break;
-        case 'price-desc': constraints.push(orderBy('price', 'desc')); break;
-        case 'popular': constraints.push(orderBy('soldCount', 'desc')); break;
-        default: constraints.push(orderBy('createdAt', 'desc'));
-      }
-
-      constraints.push(limit(PRODUCTS_PER_PAGE));
-      if (isLoadMore && lastDoc) constraints.push(startAfter(lastDoc));
-
-      const q = query(collection(db, 'products'), ...constraints);
-
-      let fetchedProducts = [];
-      let snapshotDocs = [];
-      let isFallback = false;
-
+  useEffect(() => {
+    const fetchProducts = async () => {
       try {
-        const snapshot = await getDocsWithTimeout(q, 1500);
-        fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        snapshotDocs = snapshot.docs;
+        const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+        const snapshot = await getDocsWithTimeout(q, 2000);
+        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (fetchedProducts.length > 0) {
+          setProducts(fetchedProducts);
+        } else {
+          setProducts(fallbackProducts);
+        }
       } catch (error) {
-        console.error('Error fetching products from Firestore, using mock fallback:', error);
-        isFallback = true;
+        console.error('Error fetching products:', error);
+        setProducts(fallbackProducts);
+      } finally {
+        setLoading(false);
       }
+    };
+    fetchProducts();
+  }, []);
 
-      if (fetchedProducts.length === 0) {
-        isFallback = true;
-      }
+  const fallbackProducts = [
+    { id: 'sculp-1', name: 'Teakwood Elephant Statue', salePrice: 245.00, mainImage: '/assets/cat_sculptures.png', category: 'wooden-sculptures', shortDescription: 'Teakwood • 12 Inches' },
+    { id: 'wall-2', name: 'Ornate Teak Tree of Life Carving', salePrice: 280.00, mainImage: '/assets/cat_wall_art.png', category: 'wall-art', shortDescription: 'Teakwood • 30x30 Inches' },
+    { id: 'dec-3', name: 'Ornate Sandalwood Jewelry Chest', salePrice: 150.00, mainImage: '/assets/cat_decor.png', category: 'home-decor', shortDescription: 'Sandalwood • Brass Inlay' },
+    { id: 'mask-1', name: 'Traditional Oak Tribal Mask', salePrice: 110.00, mainImage: '/assets/cat_masks.png', category: 'wooden-masks', shortDescription: 'Oak Wood • Rustic Finish' }
+  ];
 
-      if (isFallback) {
-        // Filter mock products
-        let items = [...mockProducts];
-        if (selectedCategory !== 'All') {
-          items = items.filter(p => p.category === selectedCategory);
-        }
-        
-        // Sort mock products
-        switch (sortBy) {
-          case 'price-asc':
-            items.sort((a, b) => a.price - b.price);
-            break;
-          case 'price-desc':
-            items.sort((a, b) => b.price - a.price);
-            break;
-          case 'popular':
-            items.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
-            break;
-          default:
-            items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
+  // Group products by category
+  const groupedProducts = products.reduce((acc, product) => {
+    const cat = product.category || 'other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(product);
+    return acc;
+  }, {});
 
-        // Apply debouncedSearch client-side filter
-        if (debouncedSearch) {
-          items = items.filter(p =>
-            p.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            p.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
-          );
-        }
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    toast.success(`${product.name} added to cart!`);
+  };
 
-        // Paginate mock products
-        const startIndex = isLoadMore ? products.length : 0;
-        const endIndex = startIndex + PRODUCTS_PER_PAGE;
-        const pageItems = items.slice(startIndex, endIndex);
-
-        if (isLoadMore) {
-          setProducts(prev => [...prev, ...pageItems]);
-        } else {
-          setProducts(pageItems);
-        }
-
-        setLastDoc(null);
-        setHasMore(items.length > endIndex);
-      } else {
-        // Client-side search filter
-        const filtered = debouncedSearch
-          ? fetchedProducts.filter(p =>
-              p.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-              p.category?.toLowerCase().includes(debouncedSearch.toLowerCase())
-            )
-          : fetchedProducts;
-
-        if (isLoadMore) {
-          setProducts(prev => [...prev, ...filtered]);
-        } else {
-          setProducts(filtered);
-        }
-
-        setLastDoc(snapshotDocs[snapshotDocs.length - 1] || null);
-        setHasMore(snapshotDocs.length === PRODUCTS_PER_PAGE);
-      }
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [selectedCategory, sortBy, debouncedSearch, lastDoc, products.length]);
-
-  useEffect(() => {
-    setProducts([]);
-    setLastDoc(null);
-    setHasMore(true);
-    fetchProducts(false);
-  }, [selectedCategory, sortBy, debouncedSearch]);
-
-  useEffect(() => {
-    const params = {};
-    if (selectedCategory !== 'All') params.category = selectedCategory;
-    if (sortBy !== 'newest') params.sort = sortBy;
-    if (search) params.search = search;
-    setSearchParams(params, { replace: true });
-  }, [selectedCategory, sortBy, search]);
+  const categories = [
+    { id: 'wooden-sculptures', title: 'Wooden Sculptures', subtitle: 'Heritage in Form' },
+    { id: 'wooden-masks', title: 'Wooden Masks', subtitle: 'Ancestral Heritage' },
+    { id: 'home-decor', title: 'Home Decor', subtitle: 'Artistry in Living' },
+    { id: 'wall-art', title: 'Wall Art Panels', subtitle: 'Rustic Elevations' },
+    { id: 'gift-items', title: 'Luxury Gift Items', subtitle: 'Bespoke Offerings' }
+  ];
 
   return (
     <>
-      <SEOHead
-        title="Shop | CVR Handicrafts - Premium Handcrafted Products"
-        description="Browse our collection of premium handcrafted wooden furniture, brass idols, home decor and more."
-      />
-
-      {/* Page Header */}
-      <section className="bg-espresso py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gold text-sm uppercase tracking-[0.3em] font-semibold mb-3">Our Collection</p>
-          <h1 className="font-heading text-3xl lg:text-4xl text-white mb-4">Shop All Products</h1>
-          <p className="text-white/60 max-w-lg mx-auto">Discover our curated selection of handcrafted premium products</p>
-        </div>
-      </section>
-
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Toolbar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-8">
-            {/* Search */}
-            <div className="relative flex-1 w-full sm:max-w-md">
-              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-wood-light" size={18} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search products..."
-                className="luxury-input pl-11"
-              />
-              {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-wood-light hover:text-espresso">
-                  <FiX size={16} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Filter toggle (mobile) */}
-              <button
-                onClick={() => setFiltersOpen(!filtersOpen)}
-                className="sm:hidden btn-outline py-2.5 px-4 text-xs"
-              >
-                <FiFilter size={14} /> Filters
-              </button>
-
-              {/* Sort */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="luxury-input py-2.5 pr-8 text-sm w-auto"
-              >
-                {sortOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
+      <SEOHead title="CVR Handicrafts | Shop - Artisan Hardwood Catalog" />
+      
+      {/* 4. CATEGORY PRODUCT SECTIONS (SHOPPING MODULE) */}
+      <section className="section-padding" id="shop" style={{ backgroundColor: 'var(--color-white)' }}>
+        <div className="container">
+          <div className="section-header text-center">
+            <span className="italic-sub">Exquisite Collections</span>
+            <h2>Artisan Catalog</h2>
+            <p>Browse through our collections. Every single item represents weeks of intensive labor, historic chiseling techniques, and premium ethically-sourced wood.</p>
           </div>
 
-          <div className="flex gap-8">
-            {/* Sidebar Filters */}
-            <aside className={`${filtersOpen ? 'block' : 'hidden'} sm:block w-full sm:w-56 flex-shrink-0`}>
-              <div className="sticky top-24">
-                <h3 className="font-heading text-lg font-semibold text-espresso mb-4">Categories</h3>
-                <div className="space-y-1">
-                  {categoryList.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`w-full text-left px-3 py-2 text-sm rounded transition-all ${
-                        selectedCategory === cat
-                          ? 'bg-gold/10 text-gold font-medium'
-                          : 'text-espresso hover:bg-cream'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </aside>
-
-            {/* Product Grid */}
-            <div className="flex-1">
-              {loading ? (
-                <ProductGridSkeleton count={12} />
-              ) : products.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {products.map(product => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        onQuickView={setQuickViewProduct}
-                      />
+          <div className="category-products-container">
+            {categories.map((cat) => (
+              groupedProducts[cat.id] && groupedProducts[cat.id].length > 0 && (
+                <div className="product-category-group" id={`${cat.id}-section`} key={cat.id}>
+                  <div className="section-header">
+                    <span className="italic-sub">{cat.subtitle}</span>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', color: 'var(--color-dark)', marginBottom: 'var(--spacing-sm)' }}>
+                      {cat.title}
+                    </h3>
+                  </div>
+                  
+                  <div className="product-grid">
+                    {groupedProducts[cat.id].map(product => (
+                      <div className="product-card" key={product.id}>
+                        {product.isBestSeller && <span className="product-badge product-badge-bestseller">Best Seller</span>}
+                        <div className="product-card-image">
+                          <img src={getOptimizedUrl(product.mainImage || product.image || '/assets/cat_sculptures.png', { width: 400 })} alt={product.name} loading="lazy" />
+                          <div className="product-actions-overlay">
+                            <Link to={`/product/${product.slug || product.id}`} className="product-action-btn" aria-label={`Quick view ${product.name}`}>
+                              <i className="fa-regular fa-eye"></i>
+                            </Link>
+                            <button className="product-action-btn add-to-cart-btn" onClick={() => handleAddToCart(product)} aria-label={`Add ${product.name} to cart`}>
+                              <i className="fa-solid fa-cart-plus"></i>
+                            </button>
+                          </div>
+                        </div>
+                        <div className="product-info">
+                          <span className="product-meta">{product.shortDescription || cat.title}</span>
+                          <h4 className="product-title">{product.name}</h4>
+                          <span className="product-price">{formatPrice(product.salePrice || product.price)}</span>
+                          <button className="product-mobile-add-btn add-to-cart-btn" onClick={() => handleAddToCart(product)}>
+                            <i className="fa-solid fa-cart-plus"></i> Add to Cart
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
-
-                  {hasMore && (
-                    <div className="text-center mt-10">
-                      <button
-                        onClick={() => fetchProducts(true)}
-                        disabled={loadingMore}
-                        className="btn-outline"
-                      >
-                        {loadingMore ? (
-                          <><LoadingSpinner size="sm" className="inline" /> Loading...</>
-                        ) : (
-                          'Load More Products'
-                        )}
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-20">
-                  <p className="font-heading text-xl text-espresso mb-2">No products found</p>
-                  <p className="text-wood-light">Try adjusting your filters or search terms</p>
                 </div>
-              )}
-            </div>
+              )
+            ))}
+            
+            {loading && <div className="text-center" style={{ padding: '40px 0' }}>Loading products...</div>}
+            
+            {!loading && Object.keys(groupedProducts).length === 0 && (
+              <div className="text-center" style={{ padding: '40px 0' }}>No products found.</div>
+            )}
+            
           </div>
         </div>
       </section>
-
-      <QuickViewModal
-        product={quickViewProduct}
-        isOpen={!!quickViewProduct}
-        onClose={() => setQuickViewProduct(null)}
-      />
     </>
   );
-};
-
-export default Shop;
+}
