@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { collection, query, where, limit } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { useCart } from '@/contexts/CartContext';
-import { formatPrice, getDocsWithTimeout } from '@/utils/helpers';
-import { mockProducts } from '@/utils/mockData';
+import { formatPrice } from '@/utils/helpers';
+import { localProducts } from '@/data/products';
 import { getOptimizedUrl } from '@/services/cloudinary';
 import toast from 'react-hot-toast';
 
@@ -17,44 +15,13 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProduct = () => {
       setLoading(true);
-      try {
-        const q = query(collection(db, 'products'), where('slug', '==', slug), limit(1));
-        
-        let fetchedProduct = null;
-        let isFallback = false;
-
-        try {
-          const snapshot = await getDocsWithTimeout(q, 1500);
-          if (!snapshot.empty) {
-            fetchedProduct = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-          }
-        } catch (err) {
-          isFallback = true;
-        }
-
-        if (!fetchedProduct) {
-          isFallback = true;
-        }
-
-        if (isFallback) {
-          const prod = mockProducts.find(p => p.slug === slug);
-          if (prod) {
-            setProduct(prod);
-          } else {
-            // Check by ID if slug not found
-            const prodById = mockProducts.find(p => p.id === slug);
-            if (prodById) setProduct(prodById);
-          }
-        } else {
-          setProduct(fetchedProduct);
-        }
-      } catch (error) {
-        console.error('Error fetching product:', error);
-      } finally {
+      setTimeout(() => {
+        const prod = localProducts.find(p => p.slug === slug || p.id === slug);
+        setProduct(prod || null);
         setLoading(false);
-      }
+      }, 500);
     };
     fetchProduct();
     window.scrollTo(0, 0);

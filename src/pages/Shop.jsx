@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 import { useCart } from '@/contexts/CartContext';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Link } from 'react-router-dom';
-import { formatPrice, getDocsWithTimeout } from '@/utils/helpers';
+import { formatPrice } from '@/utils/helpers';
 import { getOptimizedUrl } from '@/services/cloudinary';
 import toast from 'react-hot-toast';
+import { localProducts } from '@/data/products';
 
 export default function Shop() {
   const [products, setProducts] = useState([]);
@@ -14,32 +13,16 @@ export default function Shop() {
   const { addToCart } = useCart();
 
   useEffect(() => {
+    // Simulate network load
     const fetchProducts = async () => {
-      try {
-        const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocsWithTimeout(q, 2000);
-        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (fetchedProducts.length > 0) {
-          setProducts(fetchedProducts);
-        } else {
-          setProducts(fallbackProducts);
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setProducts(fallbackProducts);
-      } finally {
+      setLoading(true);
+      setTimeout(() => {
+        setProducts(localProducts);
         setLoading(false);
-      }
+      }, 500);
     };
     fetchProducts();
   }, []);
-
-  const fallbackProducts = [
-    { id: 'sculp-1', name: 'Teakwood Elephant Statue', salePrice: 245.00, mainImage: '/assets/cat_sculptures.png', category: 'wooden-sculptures', shortDescription: 'Teakwood • 12 Inches' },
-    { id: 'wall-2', name: 'Ornate Teak Tree of Life Carving', salePrice: 280.00, mainImage: '/assets/cat_wall_art.png', category: 'wall-art', shortDescription: 'Teakwood • 30x30 Inches' },
-    { id: 'dec-3', name: 'Ornate Sandalwood Jewelry Chest', salePrice: 150.00, mainImage: '/assets/cat_decor.png', category: 'home-decor', shortDescription: 'Sandalwood • Brass Inlay' },
-    { id: 'mask-1', name: 'Traditional Oak Tribal Mask', salePrice: 110.00, mainImage: '/assets/cat_masks.png', category: 'wooden-masks', shortDescription: 'Oak Wood • Rustic Finish' }
-  ];
 
   // Group products by category
   const groupedProducts = products.reduce((acc, product) => {
@@ -55,11 +38,9 @@ export default function Shop() {
   };
 
   const categories = [
-    { id: 'wooden-sculptures', title: 'Wooden Sculptures', subtitle: 'Heritage in Form' },
-    { id: 'wooden-masks', title: 'Wooden Masks', subtitle: 'Ancestral Heritage' },
-    { id: 'home-decor', title: 'Home Decor', subtitle: 'Artistry in Living' },
-    { id: 'wall-art', title: 'Wall Art Panels', subtitle: 'Rustic Elevations' },
-    { id: 'gift-items', title: 'Luxury Gift Items', subtitle: 'Bespoke Offerings' }
+    { id: 'ALL HANDICRAFTS', title: 'All Handicrafts', subtitle: 'Authentic Creations' },
+    { id: 'GIFTS', title: 'Luxury Gifts', subtitle: 'Bespoke Offerings' },
+    { id: 'HOME DECOR', title: 'Home Decor', subtitle: 'Artistry in Living' }
   ];
 
   return (

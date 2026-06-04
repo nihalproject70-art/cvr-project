@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 import { useCart } from '@/contexts/CartContext';
 import { SEOHead } from '@/components/seo/SEOHead';
-import { formatPrice, getDocsWithTimeout } from '@/utils/helpers';
+import { formatPrice } from '@/utils/helpers';
 import { getOptimizedUrl } from '@/services/cloudinary';
+import { localProducts } from '@/data/products';
 import toast from 'react-hot-toast';
 
 export default function Category() {
@@ -26,28 +25,25 @@ export default function Category() {
   const currentCategory = categoryMap[slug] || { title: slug.replace('-', ' '), subtitle: 'Category' };
 
   useEffect(() => {
-    const fetchCategoryProducts = async () => {
-      try {
-        const q = query(
-          collection(db, 'products'),
-          where('category', '==', slug)
-        );
-        const snapshot = await getDocsWithTimeout(q, 2000);
-        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const fetchCategoryProducts = () => {
+      setLoading(true);
+      setTimeout(() => {
+        // filter by category or subcategory slug
+        const fetchedProducts = localProducts.filter(p => {
+          const catSlug = p.category.toLowerCase().replace(/\s+/g, '-');
+          const subCatSlug = p.subcategory.toLowerCase().replace(/\s+/g, '-');
+          return catSlug === slug || subCatSlug === slug;
+        });
         
         if (fetchedProducts.length > 0) {
           setProducts(fetchedProducts);
         } else {
-          // fallback if no products found in firestore
           setProducts([
             { id: 'fallback-1', name: `Premium ${currentCategory.title} Item`, salePrice: 150.00, mainImage: '/assets/cat_sculptures.png', category: slug, shortDescription: 'Handcrafted Wood' }
           ]);
         }
-      } catch (error) {
-        console.error('Error fetching category products:', error);
-      } finally {
         setLoading(false);
-      }
+      }, 500);
     };
     fetchCategoryProducts();
   }, [slug, currentCategory.title]);

@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';
-import { db } from '@/services/firebase';
 import { useCart } from '@/contexts/CartContext';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { getOptimizedUrl } from '@/services/cloudinary';
-import { formatPrice, getDocsWithTimeout } from '@/utils/helpers';
+import { formatPrice } from '@/utils/helpers';
+import { localProducts } from '@/data/products';
 import toast from 'react-hot-toast';
-
 export default function Home() {
   // Best sellers state
   const [products, setProducts] = useState([]);
@@ -37,38 +35,18 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const fetchBestSellers = async () => {
-      try {
-        const q = query(
-          collection(db, 'products'),
-          where('isBestSeller', '==', true),
-          limit(10)
-        );
-        const snapshot = await getDocsWithTimeout(q, 1500);
-        const fetchedProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (fetchedProducts.length > 0) {
-          setProducts(fetchedProducts);
-        } else {
-          setProducts(fallbackProducts);
-        }
-      } catch (error) {
-        console.error('Error fetching best sellers:', error);
-        setProducts(fallbackProducts);
-      } finally {
+    const fetchBestSellers = () => {
+      setLoading(true);
+      setTimeout(() => {
+        const bestSellers = localProducts.filter(p => p.isBestSeller).slice(0, 10);
+        setProducts(bestSellers);
         setLoading(false);
-      }
+      }, 500);
     };
     fetchBestSellers();
   }, []);
 
-  const fallbackProducts = [
-    { id: 'sculp-1', name: 'Teakwood Elephant Statue', salePrice: 245.00, mainImage: '/assets/cat_sculptures.png', categoryName: 'Teakwood', shortDescription: 'Teakwood • 12 Inches' },
-    { id: 'wall-2', name: 'Ornate Teak Tree of Life Carving', salePrice: 280.00, mainImage: '/assets/cat_wall_art.png', categoryName: 'Teakwood', shortDescription: 'Teakwood • 30x30 Inches' },
-    { id: 'dec-3', name: 'Ornate Sandalwood Jewelry Chest', salePrice: 150.00, mainImage: '/assets/cat_decor.png', categoryName: 'Sandalwood', shortDescription: 'Sandalwood • Brass Inlay' },
-    { id: 'mask-1', name: 'Traditional Oak Tribal Mask', salePrice: 110.00, mainImage: '/assets/cat_masks.png', categoryName: 'Oak Wood', shortDescription: 'Oak Wood • Rustic Finish' }
-  ];
-
-  const displayProds = products.length > 0 ? products : fallbackProducts;
+  const displayProds = products;
 
   const scrollCarousel = (direction) => {
     if (carouselRef.current) {

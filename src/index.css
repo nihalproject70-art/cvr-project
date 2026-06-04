@@ -610,6 +610,8 @@ button {
     color: var(--color-cream);
     max-width: 750px;
     margin-top: 50px;
+    margin-inline: auto;
+    text-align: center;
 }
 
 .hero-tagline {
@@ -666,6 +668,7 @@ button {
 
 .hero-actions {
     display: flex;
+    justify-content: center;
     flex-wrap: wrap;
     gap: var(--spacing-sm);
     transform: translateY(20px);
